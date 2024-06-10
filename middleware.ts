@@ -16,6 +16,8 @@ const publicOnlyUrls: Routes = {
 
 export async function middleware(request: NextRequest) {
   const session: any = await getSession();
+  
+  
   const exists = publicOnlyUrls[request.nextUrl.pathname];
   if (!session.id) {
     if (!exists) {

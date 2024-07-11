@@ -82,43 +82,6 @@ const getUser = async (userId: number) => {
   return user;
 };
 
-const getCachedUser = (userId: number) => {
-  const cachedOperation = nextCache(getUser, [`user-info-${userId}`], {
-    tags: [`user-info-${userId}`],
-  });
-  return cachedOperation(userId);
-};
-
-const getComments = async (tweetId: number) => {
-  const comments = await db.tweetComment.findMany({
-    where: {
-      tweetId,
-    },
-    select: {
-      payload: true,
-      created_at: true,
-      id: true,
-      user: {
-        select: {
-          avatar: true,
-          username: true,
-        },
-      },
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-  });
-  return comments;
-};
-
-const getCachedComments = (tweetId: number) => {
-  const cachedOperation = nextCache(getComments, [`tweet-comment-${tweetId}`], {
-    tags: [`comments-${tweetId}`],
-  });
-  return cachedOperation(tweetId);
-};
-
 const tweetDetail = async ({ params }: { params: { id: string } }) => {
   const id = Number(params.id);
   if (isNaN(id)) return notFound();
@@ -127,8 +90,6 @@ const tweetDetail = async ({ params }: { params: { id: string } }) => {
   if (!tweet) {
     return notFound();
   }
-  const comments = await getCachedComments(id);
-  const user = await getCachedUser(session.id!);
   const { likeCount, isLiked } = await getCachedLikeStatus(id, session.id!);
   return (
     <div className="p-5 text-white">
@@ -146,10 +107,8 @@ const tweetDetail = async ({ params }: { params: { id: string } }) => {
         <div className="flex items-center gap-2 text-neutral-400 text-sm">
           <EyeIcon className="size-5" />
           <span>조회 {tweet.views}</span>
-        </div>
-        <TweetLikeButton isLiked={isLiked} likeCount={likeCount} tweetId={id} />
-      </div>
-      <TweetCommentList tweetId={id} commentsData={comments} user={user!} />
+        </div>        
+      </div>      
     </div>
   );
 };
